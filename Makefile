@@ -1,4 +1,3 @@
-# Переменные
 DB_NAME ?= users
 DB_USER ?= postgres
 MIGRATION_SCRIPT ?= cmd/db/main.go
@@ -24,20 +23,21 @@ db-init:
 		exit 1; \
 	fi
 
-# Проверка наличия необходимых инструментов
 check-deps:
 	@echo "Checking dependencies..."
 	@command -v psql >/dev/null 2>&1 || { echo "psql is required but not installed. Aborting."; exit 1; }
 	@command -v go >/dev/null 2>&1 || { echo "go is required but not installed. Aborting."; exit 1; }
+	@if [ -z "$$EMAIL_PASSWORD" ]; then \
+		echo "EMAIL_PASSWORD is not set. Aborting."; \
+		exit 1; \
+	fi
 	@echo "All dependencies are installed."
 
-# Очистка базы данных (опционально)
 clean-db:
 	@echo "Dropping database '$(DB_NAME)'..."
 	@psql -U $(DB_USER) -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 	@echo "Database '$(DB_NAME)' dropped."
 
-# Запуск всех шагов
 all: check-deps db-init run
 
 .PHONY: run db-init check-deps clean-db all

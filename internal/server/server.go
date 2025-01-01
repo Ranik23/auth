@@ -3,14 +3,15 @@ package server
 import (
 	"auth/internal/storage/postgres"
 	pb "auth/proto/auth"
+	pb2 "auth/proto/password"
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -36,7 +37,7 @@ func NewGRPCServer(database postgres.Storage, logger *slog.Logger) *Server{
 func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 
 	if !govalidator.IsEmail(req.Email) {
-		return &pb.RegisterResponse{Message: "email is not vaild"}, fmt.Errorf("email is not valid")
+		return &pb.RegisterResponse{Message: "email is not vaild"}, nil
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -101,5 +102,36 @@ func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest
 }
 
 func (s *Server) ResetPassword(ctx context.Context, req *pb.ResetPasswordRequest) (*pb.ResetPasswordResponse, error) {
-	return nil, nil
+	
+
+	connection, err := grpc.NewClient("localhost:8082", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return &pb.ResetPasswordResponse{
+			Message: "failed to connect to the server",
+			Password: "none",
+		}, nil
+	}
+
+	defer connection.Close()
+
+
+	client := pb2.NewPasswordServiceClient(connection)
+
+	resp, err := client.ResetPassword(ctx, &pb2.ResetPassworsRequest{
+		Email : req.GetEmail(),
+	})
+	if err != nil {
+		return &pb.ResetPasswordResponse{
+			Message: "failed to reset the password:",
+			Password: "error",
+		}, nil
+	}
+
+	//newPassword := resp.Password
+
+	return &pb.ResetPasswordResponse{
+		Message: "successfully reset the password",
+		Password: resp.Password,
+	}, nil
+
 }
