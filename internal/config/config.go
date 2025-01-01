@@ -22,9 +22,15 @@ type DataBaseConfig struct {
 	DatabaseName     string `json:"database_name" yaml:"database_name" validate:"required"`
 }
 
+type SMTPConfig struct {
+	Email string 		`yaml:"email"`
+	Password string 	`yaml:"password"`
+}
+
 type Config struct {
 	GRPCServerConfig `json:"grpc_server_config" yaml:"grpc_server_config"`
 	DataBaseConfig	 `json:"database_config" yaml:"database_config"`
+	SMTPConfig		 `yaml:"smtp"`
 }
 
 

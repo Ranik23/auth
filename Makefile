@@ -1,12 +1,43 @@
+# Переменные
+DB_NAME ?= users
+DB_USER ?= postgres
+MIGRATION_SCRIPT ?= cmd/db/main.go
+
 run: db-init
-	go run cmd/main/main.go
+	@echo "Starting the application..."
+	@go run cmd/main/main.go
 
 db-init:
-	@echo "Checking if database exists..."
-	@if ! psql -U postgres -lqt | cut -d \| -f 1 | grep -qw users; then \
-		echo "Database 'users' does not exist. Creating it..."; \
-		psql -U postgres -c "CREATE DATABASE users;"; \
+	@echo "Checking if database '$(DB_NAME)' exists..."
+	@if ! psql -U $(DB_USER) -lqt | cut -d \| -f 1 | grep -qw $(DB_NAME); then \
+		echo "Database '$(DB_NAME)' does not exist. Creating it..."; \
+		psql -U $(DB_USER) -c "CREATE DATABASE $(DB_NAME);"; \
 	else \
-		echo "Database 'users' already exists. Skipping creation."; \
+		echo "Database '$(DB_NAME)' already exists. Skipping creation."; \
 	fi
-	go run cmd/db/main.go
+
+	@echo "Applying migrations..."
+	@if go run $(MIGRATION_SCRIPT); then \
+		echo "Migrations applied successfully."; \
+	else \
+		echo "Migrations failed. Check the logs for details."; \
+		exit 1; \
+	fi
+
+# Проверка наличия необходимых инструментов
+check-deps:
+	@echo "Checking dependencies..."
+	@command -v psql >/dev/null 2>&1 || { echo "psql is required but not installed. Aborting."; exit 1; }
+	@command -v go >/dev/null 2>&1 || { echo "go is required but not installed. Aborting."; exit 1; }
+	@echo "All dependencies are installed."
+
+# Очистка базы данных (опционально)
+clean-db:
+	@echo "Dropping database '$(DB_NAME)'..."
+	@psql -U $(DB_USER) -c "DROP DATABASE IF EXISTS $(DB_NAME);"
+	@echo "Database '$(DB_NAME)' dropped."
+
+# Запуск всех шагов
+all: check-deps db-init run
+
+.PHONY: run db-init check-deps clean-db all

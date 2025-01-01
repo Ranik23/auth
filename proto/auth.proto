@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth;
 
-option go_package = "./proto;auth";
+option go_package = "./proto/auth;auth";
 
 // Запрос на регистрацию
 message RegisterRequest {
@@ -39,9 +39,19 @@ message ValidateTokenResponse {
   string username = 2;
 }
 
+message ResetPasswordRequest {
+  string email = 1;
+}
+
+message ResetPasswordResponse {
+  string message = 1;
+  string password = 2;
+}
+
 // Сервис аутентификации
 service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
 }

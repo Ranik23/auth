@@ -9,3 +9,7 @@ database_config:
   database_user: "postgres"
   database_password: "postgres"
   database_name: "users"
+
+smtp:
+  email: antonfedorov190@yandex.ru
+  password: 19044PaNtfedorovMEPHI

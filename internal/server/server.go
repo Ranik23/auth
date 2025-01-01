@@ -2,11 +2,14 @@ package server
 
 import (
 	"auth/internal/storage/postgres"
-	pb "auth/proto"
+	pb "auth/proto/auth"
 	"context"
-	"time"
-	"github.com/golang-jwt/jwt/v5"
+	"fmt"
 	"log/slog"
+	"time"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,6 +34,11 @@ func NewGRPCServer(database postgres.Storage, logger *slog.Logger) *Server{
 
 
 func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+
+	if !govalidator.IsEmail(req.Email) {
+		return &pb.RegisterResponse{Message: "email is not vaild"}, fmt.Errorf("email is not valid")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		s.logger.Error("failed to hash the password")
@@ -90,4 +98,8 @@ func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest
 	}
 
 	return &pb.ValidateTokenResponse{Valid: false}, nil
+}
+
+func (s *Server) ResetPassword(ctx context.Context, req *pb.ResetPasswordRequest) (*pb.ResetPasswordResponse, error) {
+	return nil, nil
 }

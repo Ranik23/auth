@@ -8,12 +8,6 @@ import (
 )
 
 
-
-
-
-
-
-
 func main() {
 
 	cfg, err := config.LoadConfig("config.yaml")
