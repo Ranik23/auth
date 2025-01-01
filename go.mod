@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/alitto/pond/v2 v2.1.6 // indirect
 	github.com/corpix/uarand v0.0.0-20170723150923-031be390f409 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect

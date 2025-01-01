@@ -40,4 +40,10 @@ clean-db:
 
 all: check-deps db-init run
 
-.PHONY: run db-init check-deps clean-db all
+protoc-auth:
+	protoc --go_out=. --go-grpc_out=. proto/auth.proto
+
+protoc-password:
+	protoc --go_out=. --go-grpc_out=. proto/password.proto
+
+.PHONY: run db-init check-deps clean-db all protoc-auth protoc-password

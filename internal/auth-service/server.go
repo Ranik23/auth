@@ -1,13 +1,14 @@
-package server
+package authservice
 
 import (
 	"auth/internal/storage/postgres"
+	"auth/internal/wpool"
 	pb "auth/proto/auth"
 	pb2 "auth/proto/password"
 	"context"
+	"log"
 	"log/slog"
 	"time"
-
 	"github.com/asaskevich/govalidator"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -20,21 +21,22 @@ const (
 	secret = "your-secret-key"
 )
 
-type Server struct {
+type AuthService struct {
 	pb.UnimplementedAuthServiceServer
-	storage 			postgres.Storage
-	logger 				*slog.Logger
+	storage postgres.Storage
+	logger  *slog.Logger
+	wpool 	*wpool.WorkerPool
 }
 
-func NewGRPCServer(database postgres.Storage, logger *slog.Logger) *Server{
-	return &Server{
+func NewGRPCServer(database postgres.Storage, logger *slog.Logger, wpool *wpool.WorkerPool) *AuthService {
+	return &AuthService{
 		storage: database,
-		logger: logger,
+		logger:  logger,
+		wpool: wpool,
 	}
 }
 
-
-func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+func (s *AuthService) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 
 	if !govalidator.IsEmail(req.Email) {
 		return &pb.RegisterResponse{Message: "email is not vaild"}, nil
@@ -52,8 +54,7 @@ func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.Reg
 	return &pb.RegisterResponse{Message: "succesfully registered"}, nil
 }
 
-
-func (s *Server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (s *AuthService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
 
 	username := req.GetUsername()
 	password := req.GetPassword()
@@ -71,7 +72,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.UserName,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
+		"exp":      time.Now().Add(time.Hour * 72).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(secret))
@@ -82,7 +83,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 	return &pb.LoginResponse{Token: tokenString}, nil
 }
 
-func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
+func (s *AuthService) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
 	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, status.Errorf(codes.Internal, "unexpected signing method: %v", token.Header["alg"])
@@ -93,7 +94,6 @@ func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest
 		return &pb.ValidateTokenResponse{Valid: false}, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
 	}
 
-
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return &pb.ValidateTokenResponse{Valid: true, Username: claims["username"].(string)}, nil
 	}
@@ -101,37 +101,35 @@ func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest
 	return &pb.ValidateTokenResponse{Valid: false}, nil
 }
 
-func (s *Server) ResetPassword(ctx context.Context, req *pb.ResetPasswordRequest) (*pb.ResetPasswordResponse, error) {
-	
+func (s *AuthService) ResetPassword(ctx context.Context, req *pb.ResetPasswordRequest) (*pb.ResetPasswordResponse, error) {
 
-	connection, err := grpc.NewClient("localhost:8082", grpc.WithInsecure(), grpc.WithBlock())
+	connection, err := grpc.NewClient("localhost:8082", grpc.WithTransportCredentials(nil))
 	if err != nil {
 		return &pb.ResetPasswordResponse{
-			Message: "failed to connect to the server",
+			Message:  "failed to connect to the server",
 			Password: "none",
 		}, nil
 	}
 
 	defer connection.Close()
 
-
 	client := pb2.NewPasswordServiceClient(connection)
 
-	resp, err := client.ResetPassword(ctx, &pb2.ResetPassworsRequest{
-		Email : req.GetEmail(),
+	_, err = client.ChangePassword(ctx, &pb2.ChangePassworsRequest{
+		Email:       req.GetEmail(),
+		NewPassword: req.GetNewPassword(),
 	})
 	if err != nil {
+		log.Printf("failed to change the password: %v\n", err)
 		return &pb.ResetPasswordResponse{
-			Message: "failed to reset the password:",
+			Message:  "internal server error",
 			Password: "error",
 		}, nil
 	}
 
-	//newPassword := resp.Password
-
+	log.Println("successfully reset the password")
 	return &pb.ResetPasswordResponse{
 		Message: "successfully reset the password",
-		Password: resp.Password,
 	}, nil
 
 }

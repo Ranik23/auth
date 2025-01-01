@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PasswordService_ResetPassword_FullMethodName = "/password.PasswordService/ResetPassword"
+	PasswordService_ChangePassword_FullMethodName = "/password.PasswordService/ChangePassword"
 )
 
 // PasswordServiceClient is the client API for PasswordService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PasswordServiceClient interface {
-	ResetPassword(ctx context.Context, in *ResetPassworsRequest, opts ...grpc.CallOption) (*ResetPasswordResponse, error)
+	ChangePassword(ctx context.Context, in *ChangePassworsRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 }
 
 type passwordServiceClient struct {
@@ -37,10 +37,10 @@ func NewPasswordServiceClient(cc grpc.ClientConnInterface) PasswordServiceClient
 	return &passwordServiceClient{cc}
 }
 
-func (c *passwordServiceClient) ResetPassword(ctx context.Context, in *ResetPassworsRequest, opts ...grpc.CallOption) (*ResetPasswordResponse, error) {
+func (c *passwordServiceClient) ChangePassword(ctx context.Context, in *ChangePassworsRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ResetPasswordResponse)
-	err := c.cc.Invoke(ctx, PasswordService_ResetPassword_FullMethodName, in, out, cOpts...)
+	out := new(ChangePasswordResponse)
+	err := c.cc.Invoke(ctx, PasswordService_ChangePassword_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *passwordServiceClient) ResetPassword(ctx context.Context, in *ResetPass
 // All implementations must embed UnimplementedPasswordServiceServer
 // for forward compatibility.
 type PasswordServiceServer interface {
-	ResetPassword(context.Context, *ResetPassworsRequest) (*ResetPasswordResponse, error)
+	ChangePassword(context.Context, *ChangePassworsRequest) (*ChangePasswordResponse, error)
 	mustEmbedUnimplementedPasswordServiceServer()
 }
 
@@ -62,8 +62,8 @@ type PasswordServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedPasswordServiceServer struct{}
 
-func (UnimplementedPasswordServiceServer) ResetPassword(context.Context, *ResetPassworsRequest) (*ResetPasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ResetPassword not implemented")
+func (UnimplementedPasswordServiceServer) ChangePassword(context.Context, *ChangePassworsRequest) (*ChangePasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
 }
 func (UnimplementedPasswordServiceServer) mustEmbedUnimplementedPasswordServiceServer() {}
 func (UnimplementedPasswordServiceServer) testEmbeddedByValue()                         {}
@@ -86,20 +86,20 @@ func RegisterPasswordServiceServer(s grpc.ServiceRegistrar, srv PasswordServiceS
 	s.RegisterService(&PasswordService_ServiceDesc, srv)
 }
 
-func _PasswordService_ResetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResetPassworsRequest)
+func _PasswordService_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePassworsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PasswordServiceServer).ResetPassword(ctx, in)
+		return srv.(PasswordServiceServer).ChangePassword(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PasswordService_ResetPassword_FullMethodName,
+		FullMethod: PasswordService_ChangePassword_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PasswordServiceServer).ResetPassword(ctx, req.(*ResetPassworsRequest))
+		return srv.(PasswordServiceServer).ChangePassword(ctx, req.(*ChangePassworsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +112,8 @@ var PasswordService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*PasswordServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ResetPassword",
-			Handler:    _PasswordService_ResetPassword_Handler,
+			MethodName: "ChangePassword",
+			Handler:    _PasswordService_ChangePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

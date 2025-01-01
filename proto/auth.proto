@@ -41,6 +41,7 @@ message ValidateTokenResponse {
 
 message ResetPasswordRequest {
   string email = 1;
+  string new_password = 2;
 }
 
 message ResetPasswordResponse {

@@ -3,7 +3,7 @@ package main
 import (
 	"auth/internal/config"
 	passwordservice "auth/internal/password-service"
-	"auth/internal/server"
+	authservice "auth/internal/auth-service"
 	"auth/internal/storage/postgres"
 	pb "auth/proto/auth"
 	pb2 "auth/proto/password"
@@ -72,7 +72,7 @@ func main() {
 		log.Fatalf("failed to register storage: %v", err)
 	}
 
-	err = container.Provide(server.NewGRPCServer)
+	err = container.Provide(authservice.NewGRPCServer)
 	if err != nil {
 		log.Fatalf("failed to register gRPC server implementation: %v", err)
 	}
@@ -88,7 +88,7 @@ func main() {
 		PasswordListener net.Listener `name:"password"`
 		GRPCServer       *grpc.Server `name:"auth"`
 		GRPCServer2      *grpc.Server `name:"password"`
-		GRPCServerImpl   *server.Server
+		GRPCServerImpl   *authservice.AuthService
 		GRPCPasswordImpl *passwordservice.PasswordService
 		Logger           *slog.Logger
 	}) {
