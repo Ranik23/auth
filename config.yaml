@@ -1,0 +1,11 @@
+grpc_server_config:
+  grpc_server_address: "localhost"
+  grpc_server_port: 8081
+  grpc_server_tls: false
+
+database_config:
+  database_host: "localhost"
+  database_port: 5432
+  database_user: "postgres"
+  database_password: "postgres"
+  database_name: "users"

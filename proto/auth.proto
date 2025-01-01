@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "./proto;auth";
+
+// Запрос на регистрацию
+message RegisterRequest {
+  string username = 1;
+  int32  age      = 2;
+  string password = 3;
+  string email    = 4;
+}
+
+// Ответ на регистрацию
+message RegisterResponse {
+  string message = 1;
+}
+
+// Запрос на вход
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// Ответ на вход
+message LoginResponse {
+  string token = 1;
+}
+
+// Запрос на проверку токена
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+// Ответ на проверку токена
+message ValidateTokenResponse {
+  bool valid = 1;
+  string username = 2;
+}
+
+// Сервис аутентификации
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+}
