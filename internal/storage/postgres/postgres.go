@@ -11,12 +11,12 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 type Storage interface {
 	SaveUser(userName string, email string, age int32, hashedPassword []byte) error
 	DeleteUser(userName string) error
-	GetUser(userName string) (*entity.User, error)
+	GetUserByUserName(userName string) (*entity.User, error)
+	GetUserByEmail(email string) (*entity.User, error)
+	ChangePassword(email string, newPassword []byte) error
 }
 
 type StorageImpl struct {
@@ -28,16 +28,16 @@ func NewStoragePostgres(cfg *config.Config) (*StorageImpl, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &StorageImpl{db: db}, nil
 }
 
 func (s *StorageImpl) SaveUser(userName string, email string, age int32, hashedPassword []byte) error {
 	user := &entity.User{
-		UserName: userName,
+		UserName:       userName,
 		HashedPassword: hashedPassword,
-		Age: age,
-		Email: email,
+		Age:            age,
+		Email:          email,
 	}
 
 	if err := s.db.Create(user).Error; err != nil {
@@ -60,7 +60,7 @@ func (s *StorageImpl) DeleteUser(userName string) error {
 	return nil
 }
 
-func (s *StorageImpl) GetUser(userName string) (*entity.User, error) {
+func (s *StorageImpl) GetUserByUserName(userName string) (*entity.User, error) {
 	var user entity.User
 	if err := s.db.Where("user_name = ?", userName).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -74,6 +74,32 @@ func (s *StorageImpl) GetUser(userName string) (*entity.User, error) {
 	return &user, nil
 }
 
+func (s *StorageImpl) GetUserByEmail(email string) (*entity.User, error) {
+	var user entity.User
+	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("user record not found")
+			return nil, gorm.ErrRecordNotFound
+		}
+		log.Printf("error fetching user: %v", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *StorageImpl) ChangePassword(email string, newPassword []byte) error {
+	if err := s.db.Model(&entity.User{}).Where("email = ?", email).Update("hashed_password", newPassword).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Println("user not found")
+			return err
+		}
+		log.Printf("error changing the password: %v", err)
+		return err
+	}
+
+	return nil
+}
 
 func ConnectToDb(cfg *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(

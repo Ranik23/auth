@@ -2,13 +2,13 @@ package authservice
 
 import (
 	"auth/internal/storage/postgres"
-	"auth/internal/wpool"
 	pb "auth/proto/auth"
 	pb2 "auth/proto/password"
 	"context"
 	"log"
 	"log/slog"
 	"time"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -25,14 +25,12 @@ type AuthService struct {
 	pb.UnimplementedAuthServiceServer
 	storage postgres.Storage
 	logger  *slog.Logger
-	wpool 	*wpool.WorkerPool
 }
 
-func NewGRPCServer(database postgres.Storage, logger *slog.Logger, wpool *wpool.WorkerPool) *AuthService {
+func NewGRPCServer(database postgres.Storage, logger *slog.Logger) *AuthService {
 	return &AuthService{
 		storage: database,
 		logger:  logger,
-		wpool: wpool,
 	}
 }
 
@@ -59,7 +57,7 @@ func (s *AuthService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	username := req.GetUsername()
 	password := req.GetPassword()
 
-	user, err := s.storage.GetUser(username)
+	user, err := s.storage.GetUserByUserName(username)
 	if err != nil {
 		s.logger.Error("failed to get the user")
 		return nil, err

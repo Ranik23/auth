@@ -27,6 +27,10 @@ type SMTPConfig struct {
 	Password string 	`yaml:"password"`
 }
 
+type KafkaConfig struct {
+	
+}
+
 type Config struct {
 	GRPCServerConfig `json:"grpc_server_config" yaml:"grpc_server_config"`
 	DataBaseConfig	 `json:"database_config" yaml:"database_config"`
