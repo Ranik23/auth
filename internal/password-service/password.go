@@ -2,6 +2,8 @@ package passwordservice
 
 import (
 	"auth/internal/config"
+	mock_reader "auth/internal/kafka/kafka-reader/mock_reader"
+	mock_writer "auth/internal/kafka/kafka-writer/mock_writer"
 	"auth/internal/storage/postgres"
 	pb "auth/proto/password"
 	"context"
@@ -16,10 +18,11 @@ type PasswordService struct {
 	pb.UnimplementedPasswordServiceServer
 	cfg         *config.Config
 	storage     postgres.Storage
-	kafkaWriter *kafka.Writer
+	kafkaWriter mock_writer.KafkaWriterInterface
+	kafkaReader mock_reader.KafkaReaderInterface
 }
 
-func NewPasswordService(cfg *config.Config, strg postgres.Storage, kafkaWriter *kafka.Writer) *PasswordService {
+func NewPasswordService(cfg *config.Config, strg postgres.Storage, kafkaWriter mock_writer.KafkaWriterInterface) *PasswordService {
 	return &PasswordService{
 		cfg:         cfg,
 		storage:     strg,
@@ -100,6 +103,7 @@ func (ps *PasswordService) sendNotificationEvent(email, message string) error {
 	}
 
 	if err := ps.kafkaWriter.WriteMessages(context.Background(), kafka.Message{
+		Topic: "password_info",
 		Value: eventJSON,
 	}); err != nil {
 		log.Printf("Failed to send Kafka message: %v", err)

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"auth/internal/config"
-	passwordservice "auth/internal/password-service"
 	authservice "auth/internal/auth-service"
+	"auth/internal/config"
+	"auth/internal/kafka/kafka-writer/mock_writer"
+	passwordservice "auth/internal/password-service"
 	"auth/internal/storage/postgres"
 	pb "auth/proto/auth"
 	pb2 "auth/proto/password"
@@ -13,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -36,13 +36,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Создаем мок для кафки
+	mockKafkaWriter := mock_writer.MockKafkaWriterImpl{}
+
 	// Инициализация gRPC серверов
 	authServer := grpc.NewServer()
 	passwordServer := grpc.NewServer()
 
 	// Инициализация сервисов
 	authService := authservice.NewGRPCServer(storage, logger)
-	passwordService := passwordservice.NewPasswordService(cfg, storage, nil) // Kafka writer можно добавить позже
+	passwordService := passwordservice.NewPasswordService(cfg, storage, &mockKafkaWriter) // Kafka writer можно добавить позже
 
 	// Регистрация сервисов на gRPC серверах
 	pb.RegisterAuthServiceServer(authServer, authService)

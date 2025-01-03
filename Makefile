@@ -46,4 +46,7 @@ protoc-auth:
 protoc-password:
 	protoc --go_out=. --go-grpc_out=. proto/password.proto
 
-.PHONY: run db-init check-deps clean-db all protoc-auth protoc-password
+protoc-notification:
+	protoc --go_out=. --go-grpc_out=. proto/notification.proto
+
+.PHONY: run db-init check-deps clean-db all protoc-auth protoc-password protoc-notification

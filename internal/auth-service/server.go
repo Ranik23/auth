@@ -132,8 +132,7 @@ func (s *AuthService) ResetPassword(ctx context.Context, req *pb.ResetPasswordRe
 	defer conn.Close()
 
 	client := pb2.NewPasswordServiceClient(conn)
-
-	// Вызов метода ChangePassword
+	
 	_, err = client.ChangePassword(ctx, &pb2.ChangePasswordRequest{
 		Email:       req.GetEmail(),
 		NewPassword: req.GetNewPassword(),

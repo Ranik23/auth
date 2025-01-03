@@ -19,7 +19,17 @@ func (m *MockStorage) DeleteUser(userName string) error {
 	return args.Error(0)
 }
 
-func (m *MockStorage) GetUser(userName string) (*entity.User, error) {
+func (m *MockStorage) GetUserByUserName(userName string) (*entity.User, error) {
 	args := m.Called(userName)
 	return args.Get(0).(*entity.User), args.Error(1)
+}
+
+func (m *MockStorage) GetUserByEmail(email string) (*entity.User, error) {
+	args := m.Called(email)
+	return args.Get(0).(*entity.User), args.Error(1)
+}
+
+func (m *MockStorage) ChangePassword(email string, newPassword []byte) error {
+	args := m.Called(email, newPassword)
+	return args.Error(1)
 }

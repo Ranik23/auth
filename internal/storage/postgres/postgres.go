@@ -97,6 +97,7 @@ func (s *StorageImpl) ChangePassword(email string, newPassword []byte) error {
 		log.Printf("error changing the password: %v", err)
 		return err
 	}
+	log.Println("password changed", email, newPassword)
 
 	return nil
 }
