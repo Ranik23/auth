@@ -123,8 +123,7 @@ func (s *AuthService) ValidateToken(ctx context.Context, req *pb.ValidateTokenRe
 }
 
 func (s *AuthService) ResetPassword(ctx context.Context, req *pb.ResetPasswordRequest) (*pb.ResetPasswordResponse, error) {
-	// Создание gRPC клиента для PasswordService
-	conn, err := grpc.NewClient("localhost:8082", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("localhost:8082", grpc.WithTransportCredentials(insecure.NewCredentials())) // из редиса брать порты и хосты
 	if err != nil {
 		s.logger.Error("failed to connect to password service", "error", err)
 		return &pb.ResetPasswordResponse{Message: "internal server error"}, status.Errorf(codes.Internal, "failed to connect to password service")

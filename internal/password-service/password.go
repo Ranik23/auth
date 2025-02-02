@@ -73,7 +73,6 @@ func (ps *PasswordService) UpdatePassword(ctx context.Context, req *pb.UpdatePas
 		}, nil
 	}
 
-	// Используем метод ChangePassword сервиса для обновления пароля
 	resp, err := ps.ChangePassword(ctx, &pb.ChangePasswordRequest{
 		Email:       req.GetEmail(),
 		NewPassword: req.GetNewPassword(),
